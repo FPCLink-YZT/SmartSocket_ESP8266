@@ -21,17 +21,54 @@ WiFiServer server(80);
 void setup(){
   Serial.begin(115200);
   Serial.println("");
-  Serial.println("Smart Socket ESP8266EX Firmware Ver0.1.stable Build24");
+  Serial.println("Smart Socket ESP8266EX Firmware Ver0.2.stable Build24");
   Serial.println("Developed by Madobi Nanami");
   Serial.println("Personal site: https://nanami.tech");
   pinMode(ledPin,OUTPUT);
   digitalWrite(ledPin,HIGH);
   pinMode(relay,OUTPUT);
   digitalWrite(relay,LOW);
-  Serial.print("Connecting to ");
-  Serial.print(ssid);
-  Serial.print(" with password: ");
-  Serial.println(password);
+  EEPROM.begin(512);
+  EEPROM.read(0,32);
+  EEPROM.read(32, 32);
+  if(strlen(ssid) == 0 || strlen(password) == 0){
+    Serial.println("No WiFi settings found in EEPROM, please set them.");
+    Serial.println("Please enter SSID:");
+    while(!Serial.available());
+    String inputSsid = Serial.readStringUntil('\n');
+    inputSsid.trim();
+    if(inputSsid.length() > 32) {
+      Serial.println("SSID is too long, please enter a shorter one.");
+      return;
+    }
+    Serial.println("Please enter Password:");
+    while(!Serial.available());
+    String inputPassword = Serial.readStringUntil('\n');
+    inputPassword.trim();
+    if(inputPassword.length() > 32) {
+      Serial.println("Password is too long, please enter a shorter one.");
+      return;
+    }
+    Serial.println("Trying to connect to WiFi...");
+    WIFI.begin(inputSsid.c_str(), inputPassword.c_str());
+    while(WiFi.status() != WL_CONNECTED){
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("Connected to WiFi.");
+    Serial.println("Saving WiFi settings to EEPROM...");
+    saveWiFiSettings(inputSsid.c_str(), inputPassword.c_str());
+    Serial.println("WiFi settings saved.");
+    
+  } else {
+    Serial.println("Loaded WiFi settings from EEPROM.");
+    String ssid = EEPROM.getString(0, 32);
+    String password = EEPROM.getString(32, 32);
+    Serial.print("SSID: ");
+    Serial.println(ssid);
+    Serial.print("Password: ");
+    Serial.println(password);
+  }
   WiFi.begin(ssid,password);
   while(WiFi.status() !=WL_CONNECTED){
     delay(500);

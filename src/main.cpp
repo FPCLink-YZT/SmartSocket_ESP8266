@@ -30,7 +30,7 @@ void setup(){
   digitalWrite(relay,LOW);
   EEPROM.begin(512);
   EEPROM.read(0,32);
-  EEPROM.read(32, 32);
+  EEPROM.read(32,32);
   if(strlen(ssid) == 0 || strlen(password) == 0){
     Serial.println("No WiFi settings found in EEPROM, please set them.");
     Serial.println("Please enter SSID:");

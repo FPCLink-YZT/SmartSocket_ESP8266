@@ -115,5 +115,6 @@
     "string_view": "cpp",
     "initializer_list": "cpp",
     "ranges": "cpp"
-  }
+  },
+  "github-enterprise.uri": "https://192.168.1.3"
 }

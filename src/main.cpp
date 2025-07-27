@@ -10,28 +10,78 @@ int UdpbeginPacketTest;
 int UdpendPacketTest;
 int digitalStatus;
 
-const char *ssid = "YZTRoomWifi";
-const char *password = "fpclink114roomwifi";
-
 WiFiUDP Udp;
 unsigned int localUdpPort = 443;
 char incomingPacket[537];
 WiFiServer server(80);
 
+void loadWiFiSettings(char* ssid, char* password) { //Read WiFi settings from EEPROM
+  EEPROM.begin(64); //Initialize EEPROM with size 64 bytes
+  for (int i = 0; i < 32; i++) {
+   char c = EEPROM.read(i);
+  //  Serial.print(c);
+  //  Serial.print(" ");
+  //  Serial.print((int)c);
+  //  Serial.print("  ");
+   ssid[i] = c;
+   if(c =='\0'){
+    break;
+   }
+  }
+  for (int i = 0; i < 32; i++) {
+   char c = EEPROM.read(i + 32);
+  //  Serial.print(c);
+  //  Serial.print(" ");
+  //  Serial.print((int)c);
+  //  Serial.print("  ");
+   password[i] = c;
+   if(c == '\0'){
+    break;
+   }
+  }
+  EEPROM.end();
+}
+
+void saveWiFiSettings(const char ssid[32], const char password[32]) {
+  EEPROM.begin(64); //Initialize EEPROM with size 64 bytes
+  for(int i=0; i<32; i++) {
+    // Serial.print(ssid[i]);
+    // Serial.print(" ");
+    // Serial.print((int)ssid[i]);
+    EEPROM.write(i, ssid[i]); //Write SSID to EEPROM
+    Serial.print(ssid[i]);
+    if(ssid[i] == '\0') {
+      break;
+    }
+  }
+  for(int i=0; i<32; i++) {
+    // Serial.print(password[i]);
+    // Serial.print(" ");
+    // Serial.print((int)password[i]);
+    EEPROM.write(i+32, password[i]); //Write Password to EEPROM
+    Serial.print(password[i]);
+    if(password[i] == '\0') {
+      break;
+    }
+  }
+  Serial.println("EEPROM.end");
+  EEPROM.end();
+}
+
 void setup(){
   Serial.begin(115200);
-  Serial.println("");
-  Serial.println("Smart Socket ESP8266EX Firmware Ver0.2.stable Build24");
+  Serial.println(""); //Print firmware information
+  Serial.println("Smart Socket ESP8266EX Firmware Ver.1.0");
   Serial.println("Developed by Madobi Nanami");
   Serial.println("Personal site: https://nanami.tech");
-  pinMode(ledPin,OUTPUT);
+  pinMode(ledPin,OUTPUT); //Initialize LED pin
   digitalWrite(ledPin,HIGH);
-  pinMode(relay,OUTPUT);
+  pinMode(relay,OUTPUT); //Initialize relay pin
   digitalWrite(relay,LOW);
-  EEPROM.begin(512);
-  EEPROM.read(0,32);
-  EEPROM.read(32,32);
-  if(strlen(ssid) == 0 || strlen(password) == 0){
+  char ssid[32];
+  char password[32];
+  loadWiFiSettings(ssid, password); //Load WiFi settings from EEPROM
+  if(strlen(ssid) == 0 || strlen(password) == 0){ //Check if WiFi settings are empty
     Serial.println("No WiFi settings found in EEPROM, please set them.");
     Serial.println("Please enter SSID:");
     while(!Serial.available());
@@ -50,7 +100,7 @@ void setup(){
       return;
     }
     Serial.println("Trying to connect to WiFi...");
-    WIFI.begin(inputSsid.c_str(), inputPassword.c_str());
+    WiFi.begin(inputSsid.c_str(), inputPassword.c_str());
     while(WiFi.status() != WL_CONNECTED){
       delay(500);
       Serial.print(".");
@@ -61,9 +111,7 @@ void setup(){
     Serial.println("WiFi settings saved.");
     
   } else {
-    Serial.println("Loaded WiFi settings from EEPROM.");
-    String ssid = EEPROM.getString(0, 32);
-    String password = EEPROM.getString(32, 32);
+    Serial.println("Load WiFi settings from EEPROM.");
     Serial.print("SSID: ");
     Serial.println(ssid);
     Serial.print("Password: ");
@@ -75,26 +123,11 @@ void setup(){
     Serial.println(".");
   }
   Serial.println("Connected.");
-
   server.begin();
   Udp.begin(localUdpPort);
   Serial.println("UDP server started. Listening on port 443");
   Serial.print("Use this address to connect: ");
   Serial.println(WiFi.localIP());
-}
-
-void saveWiFiSettings(const char* ssid, const char* password) {
-  EEPROM.begin(512);
-  EEPROM.putString(0, ssid);
-  EEPROM.putString(32, password);
-  EEPROM.commit();
-  EEPROM.end();
-}
-void loadWiFiSettings(char* ssid, char* password) {
-  EEPROM.begin(512);
-  EEPROM.getString(0, ssid, 32);
-  EEPROM.getString(32, password, 32);
-  EEPROM.end();
 }
 
 void loop(){
@@ -118,26 +151,18 @@ void loop(){
         return;
       }
       if(strcmp(incomingPacket, "device.read") == 0){
+        Serial.println("Device information requested.");
         Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
         Udp.write("[Chipset]ESP8266EX");
-        Serial.println("chipset");
         Udp.write("[Manufacture]Espressif");
-        Serial.println("manufacture");
         Udp.write("[DeviceType]relayController");
-        Serial.println("devicetype");
         Udp.write("[FirmwareName]Smart Socket");
-        Serial.println("firmwarename");
-        Udp.write("[FirmwareVersion]0.1.stable");
-        Serial.println("firmwareversion");
+        Udp.write("[FirmwareVersion]1.0.stable");
         Udp.write("[FirmwareBuildVer]24");
-        Serial.println("firmwarebuildver");
         Udp.write("[Developer]Madobi Nanami");
-        Serial.println("developer");
-        Udp.write("[BuildDate]2024.08.07");
-        Serial.println("builddate");
+        Udp.write("[BuildDate]2025.07.26");
         delay(500);
         Udp.write("[Command]EOF");
-        Serial.println("eof");
         Udp.endPacket();
         return;
       }

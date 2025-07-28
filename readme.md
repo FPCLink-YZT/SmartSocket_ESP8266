@@ -4,7 +4,7 @@
   
 # Features  
  - UDP control over WiFi  
- - Set WiFi SSID&Password by serial  
+ - LED status report
   
 # How to use  
  - Download and flash the firmware in the release page  

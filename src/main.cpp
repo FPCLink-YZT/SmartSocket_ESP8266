@@ -5,9 +5,9 @@
 #include <WiFiServer.h>
 
 #define relay 0
-int ledPin = 2;
-int UdpbeginPacketTest;
-int UdpendPacketTest;
+#define ledPin 2
+int udpBeginPacketTest;
+int udpEndPacketTest;
 int digitalStatus;
 
 WiFiUDP Udp;
@@ -300,6 +300,8 @@ void loop(){
   }
   // TODO: Implement web server functionality
   // if(server.hasClient()){ // Check if there is a client connected
+  //   Serial.println("Client connected to web server.");
+  //   server.setNoDelay(true); // Disable Nagle's algorithm for low latency
   //   WiFiClient client = server.available();
   //   if(client){
   //     Serial.println("New client connected.");
